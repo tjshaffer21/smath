@@ -1,6 +1,6 @@
 (asdf:defsystem #:smath
   :description "A simple math library."
-  :version "0.1.0"
+  :version "0.1.1"
   :author "Thomas Shaffer <tjshaffer21@gmail.com>"
   :license "MIT"
   :serial t
@@ -17,6 +17,8 @@
   :license "MIT"
   :serial t
   :depends-on (:lisp-unit
+               :trivial-benchmark
                :smath)
   :components ((:file "tests/package")
-               (:file "tests/test")))
+               (:file "tests/test")
+               (:file "tests/benchmarks")))

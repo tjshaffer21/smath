@@ -11,8 +11,7 @@
     bool
   Error
     type-error"
-  (declare (type integer n k)
-           (optimize (speed 3) (safety 3) (debug 0)))
+  (declare (type integer n k))
 
   (cond ((or (<= n 1) (and (> n 2) (evenp n)))
          (return-from primep nil))

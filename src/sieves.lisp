@@ -1,34 +1,39 @@
 (in-package #:smath)
 (declaim (optimize (speed 3) (safety 3) (debug 0)))
 
-(defun erathosthenes-sieve (number)
+(defun erathosthenes-sieve (n)
   "Sieve of Erathosthenes algorithm.
 
   Parameter
-    number : int : 1 < NUMBER < array-total-size-limit
+    n : int : 1 < N < array-total-size-limit
   Return
     list
     nil : invalid input
   Error
-    type-error : NUMBER is not an integer."
-  (declare (type integer number)
-           (optimize (speed 3) (safety 3) (debug 0)))
+    type-error : N is not an integer."
+  (declare (type integer n))
 
-  (when (or (<= number 1) (>= number array-total-size-limit))
+  (when (or (<= n 1) 
+            (>= n array-total-size-limit))
     (return-from erathosthenes-sieve nil))
-  (iterate:iter
-    (iterate:with primes = (make-array (1- number) :element-type 'bit
-                                                   :initial-element 1))
-    (iterate:for i iterate::from 2 iterate::to (ceiling (sqrt number)))
-    (when (smath:primep i)
-          (iterate:iter
-            (iterate:for j iterate:in (multiples i number))
-            (setf (bit primes (- j 2)) 0)))
-    (iterate:finally
-      (iterate::return
+    
+  (let ((primes (make-array (1+ n) :element-type 'bit :initial-element 1)))
+    (setf (aref primes 0) 0)
+    (setf (aref primes 1) 0)
+    (iterate:iter
+      (iterate:for i iterate::from 3)
+      (iterate:until (> (* i i) n))
+      (when (= (aref primes i) 1)
         (iterate:iter
-          (iterate:for i iterate::from 0 iterate::to (- number 2))
-          (when (= (bit primes i) 1) (iterate::collect (+ i 2))))))))
+          (iterate:for k iterate::initially (* i i) iterate::then (+ k i))
+          (iterate:while (<= k n))
+          (setf (aref primes k) 0)))
+      (iterate:finally (iterate::return
+        (append (list 2) 
+                (iterate:iter
+                    (iterate:for i iterate::from 3 iterate::to n iterate::by 2)
+                    (when (= (bit primes i) 1)
+                      (iterate::collect i)))))))))
 
 (defun sundaram-sieve (n)
   "Sieve of Sundaram algorithm.
@@ -40,26 +45,24 @@
     nil : invalid input
   Error
     type-error : N is not an integer."
-  (declare (type integer n)
-           (optimize (speed 3) (safety 3) (debug 0)))
+  (declare (type integer n))
 
-  (let ((adjust (floor (- n 2) 2)))
+  (let ((adjust (floor (- n 1) 2)))
     (when (or (<= adjust 1) (>= adjust array-total-size-limit))
       (return-from sundaram-sieve nil))
     (iterate:iter
-      (iterate:with sieve = (make-array adjust :element-type 'bit :initial-element 1))
+      (iterate:with sieve = (make-array (1+ adjust) :element-type 'bit :initial-element 1))
       (iterate:for i iterate::from 1 iterate::to adjust)
       (iterate:iter
-        (iterate:for k = (- (+ i j (* 2 i j)) 2))
         (iterate:for j iterate::initially 1 iterate::then (1+ j))
-        (iterate:while (< k adjust))
+        (iterate:for k = (+ i j (* 2 i j)))
+        (iterate:while (<= k adjust))
         (setf (bit sieve k) 0))
       (iterate:finally
         (iterate::return
-          (append (list 2 3)
+          (append (list 2)
                   (iterate:iter
-                    (iterate:for c iterate::initially 0 iterate::then (1+ c))
-                    (iterate:while (< c adjust))
+                    (iterate:for c iterate::initially 1 iterate::then (1+ c))
+                    (iterate:while (<= c adjust))
                     (when (= (bit sieve c) 1)
-                      ;; 2n+1; but, c(0..n] -> 2..n
-                      (iterate::collecting (1+ (* 2 (+ c 2))))))))))))
+                      (iterate::collecting (1+ (* 2 c)))))))))))
